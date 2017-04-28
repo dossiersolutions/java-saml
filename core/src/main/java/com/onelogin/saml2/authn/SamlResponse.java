@@ -290,23 +290,46 @@ public class SamlResponse {
 
 			if (signedElements.isEmpty() || (!hasSignedAssertion && !hasSignedResponse)) {
 				throw new ValidationError("No Signature found. SAML Response rejected", ValidationError.NO_SIGNATURE_FOUND);
-			} else {				 
-				X509Certificate cert = settings.getIdpx509cert();
-				String fingerprint = settings.getIdpCertFingerprint();
-				String alg = settings.getIdpCertFingerprintAlgorithm();
+			} else {
+        X509Certificate cert = settings.getIdpx509cert();
+        X509Certificate secondaryCert = settings.getIdpx509SecondaryCert();
+        String fingerprint = settings.getIdpCertFingerprint();
+        String alg = settings.getIdpCertFingerprintAlgorithm();
 
-				if (hasSignedResponse && !Util.validateSign(samlResponseDocument, cert, fingerprint, alg, Util.RESPONSE_SIGNATURE_XPATH)) {
-					throw new ValidationError("Signature validation failed. SAML Response rejected", ValidationError.INVALID_SIGNATURE);
-				}
+        boolean failedValidation = false;
+        if (hasSignedResponse && !Util.validateSign(samlResponseDocument, cert, fingerprint, alg, Util.RESPONSE_SIGNATURE_XPATH)) {
+          if (secondaryCert != null) {
+            if (hasSignedResponse && !Util.validateSign(samlResponseDocument, secondaryCert, null, null, Util.RESPONSE_SIGNATURE_XPATH)) {
+              failedValidation = true;
+            } else {
+              LOGGER.warn("Secondary Signing Certificate used (samlResponseDocument)!");
+            }
+          } else {
+            failedValidation = true;
+          }
+        }
 
-				final Document documentToCheckAssertion = encrypted ? decryptedDocument : samlResponseDocument;
-				if (hasSignedAssertion && !Util.validateSign(documentToCheckAssertion, cert, fingerprint, alg, Util.ASSERTION_SIGNATURE_XPATH)) {
-					throw new ValidationError("Signature validation failed. SAML Response rejected", ValidationError.INVALID_SIGNATURE);
-				}
-			}
+        final Document documentToCheckAssertion = encrypted ? decryptedDocument : samlResponseDocument;
 
-			LOGGER.debug("SAMLResponse validated --> " + samlResponseString);
-			return true;
+        if (hasSignedAssertion && !Util.validateSign(documentToCheckAssertion, cert, fingerprint, alg, Util.ASSERTION_SIGNATURE_XPATH)) {
+          if (secondaryCert != null) {
+            if (hasSignedAssertion && !Util.validateSign(documentToCheckAssertion, secondaryCert, null, null, Util.ASSERTION_SIGNATURE_XPATH)) {
+              failedValidation = true;
+            } else {
+              LOGGER.warn("Secondary Signing Certificate used (documentToCheckAssertion)!");
+            }
+          } else {
+            failedValidation = true;
+          }
+        }
+
+        if (failedValidation) {
+          throw new ValidationError("Signature validation failed. SAML Response rejected", ValidationError.INVALID_SIGNATURE);
+        }
+      }
+
+      LOGGER.debug("SAMLResponse validated --> " + samlResponseString);
+      return true;
 		} catch (Exception e) {
 			error = e.getMessage();
 			LOGGER.debug("SAMLResponse invalid --> " + samlResponseString);

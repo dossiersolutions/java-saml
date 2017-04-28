@@ -23,7 +23,7 @@ import com.onelogin.saml2.util.Util;
  * Saml2Settings class of OneLogin's Java Toolkit.
  *
  * A class that implements the settings handler
- */ 
+ */
 public class Saml2Settings {
 	/**
      * Private property to construct a logger for this class.
@@ -33,7 +33,7 @@ public class Saml2Settings {
 	// Toolkit settings
 	private boolean strict = false;
 	private boolean debug = false;
-	
+
 	// SP
 	private String spEntityId = "";
 	private URL spAssertionConsumerServiceUrl = null;
@@ -52,6 +52,7 @@ public class Saml2Settings {
 	private URL idpSingleLogoutServiceResponseUrl = null;
 	private String idpSingleLogoutServiceBinding = Constants.BINDING_HTTP_REDIRECT;
 	private X509Certificate idpx509cert = null;
+  private X509Certificate idpx509SecondaryCert = null;
 	private String idpCertFingerprint = null;
 	private String idpCertFingerprintAlgorithm = "sha1";
 
@@ -197,6 +198,10 @@ public class Saml2Settings {
 		return idpx509cert;
 	}
 
+  public X509Certificate getIdpx509SecondaryCert() {
+    return idpx509SecondaryCert;
+  }
+
 	/**
 	 * @return the idpCertFingerprint setting value
 	 */
@@ -266,7 +271,7 @@ public class Saml2Settings {
 	public Boolean getWantNameId() {
 		return wantNameId;
 	}
-	
+
 	/**
 	 * @return the wantNameIdEncrypted setting value
 	 */
@@ -329,10 +334,10 @@ public class Saml2Settings {
 	public Boolean isDebugActive() {
 		return this.debug;
 	}
-	
+
 	/**
 	 * Set the strict setting value
-	 * 
+	 *
 	 * @param strict
 	 *            the strict to be set
 	 */
@@ -501,6 +506,10 @@ public class Saml2Settings {
 		this.idpx509cert = idpX509cert;
 	}
 
+  protected final void setIdpx509SecondaryCert(X509Certificate idpx509SecondaryCert) {
+    this.idpx509SecondaryCert = idpx509SecondaryCert;
+  }
+
 	/**
 	 * Set the idpCertFingerprint setting value
 	 *
@@ -645,7 +654,7 @@ public class Saml2Settings {
 	 * Set the wantXMLValidation setting value
 	 *
 	 * @param wantXMLValidation
-	 *            the wantXMLValidation value to be set. Based on it the SP will validate SAML messages against the XML scheme 
+	 *            the wantXMLValidation value to be set. Based on it the SP will validate SAML messages against the XML scheme
 	 */
 	public void setWantXMLValidation(Boolean wantXMLValidation) {
 		this.wantXMLValidation = wantXMLValidation;
@@ -719,7 +728,7 @@ public class Saml2Settings {
 
 	/**
 	 * Set contacts info that will be listed on the Service Provider metadata
-	 * 
+	 *
 	 * @param contacts
 	 *            the contacts to set
 	 */
@@ -739,7 +748,7 @@ public class Saml2Settings {
 
 	/**
 	 * Checks the settings .
-	 * 
+	 *
 	 * @return errors found on the settings data
 	 */
 	public List<String> checkSettings() {
@@ -748,10 +757,10 @@ public class Saml2Settings {
 
 		return errors;
 	}
-	
+
 	/**
 	 * Checks the IdP settings .
-	 * 
+	 *
 	 * @return errors found on the IdP settings data
 	 */
 	public List<String> checkIdPSettings() {
@@ -773,7 +782,7 @@ public class Saml2Settings {
 		if (this.getIdpx509cert() == null && !checkRequired(this.getIdpCertFingerprint())) {
 			errorMsg = "idp_cert_or_fingerprint_not_found_and_required";
 			errors.add(errorMsg);
-			LOGGER.error(errorMsg);			
+			LOGGER.error(errorMsg);
 		}
 
 		if (this.getNameIdEncrypted() == true && this.getIdpx509cert() == null) {
@@ -865,7 +874,7 @@ public class Saml2Settings {
 
 		return (cert != null && key != null);
 	}
-	
+
 	/**
 	 * Auxiliary method to check required properties.
 	 *
@@ -896,7 +905,7 @@ public class Saml2Settings {
 	 * @return the SP metadata (xml)
 	 *
 	 * @throws CertificateEncodingException
-	 */	
+	 */
 	public String getSPMetadata() throws CertificateEncodingException {
 		Metadata metadataObj = new Metadata(this);
 		String metadataString = metadataObj.getMetadataString();
@@ -912,22 +921,22 @@ public class Saml2Settings {
 						this.getSPcert(),
 						this.getSignatureAlgorithm()
 				);
-			} catch (Exception e) {				
+			} catch (Exception e) {
 				LOGGER.debug("Error executing signMetadata: " + e.getMessage(), e);
 			}
 		}
 
 		return metadataString;
 	}
-	
+
 	/**
 	 * Validates an XML SP Metadata.
 	 *
 	 * @param metadataString Metadata's XML that will be validate
-	 * 
+	 *
 	 * @return Array The list of found errors
 	 *
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static List<String> validateMetadata(String metadataString) throws Exception {
 
@@ -967,7 +976,7 @@ public class Saml2Settings {
 			}
 		}
 		// TODO Validate Sign if required with Util.validateMetadataSign
-		
+
 		return errors;
 	}
 }

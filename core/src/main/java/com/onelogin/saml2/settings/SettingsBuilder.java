@@ -65,6 +65,7 @@ public class SettingsBuilder {
 	public final static String IDP_SINGLE_LOGOUT_SERVICE_BINDING_PROPERTY_KEY = "onelogin.saml2.idp.single_logout_service.binding";
 
 	public final static String IDP_X509CERT_PROPERTY_KEY = "onelogin.saml2.idp.x509cert";
+  public final static String IDP_X509CERT_SECONDARY_PROPERTY_KEY = "onelogin.saml2.idp.secondary.x509cert";
 	public final static String CERTFINGERPRINT_PROPERTY_KEY = "onelogin.saml2.idp.certfingerprint";
 	public final static String CERTFINGERPRINT_ALGORITHM_PROPERTY_KEY = "onelogin.saml2.idp.certfingerprint_algorithm";
 
@@ -224,6 +225,10 @@ public class SettingsBuilder {
 		X509Certificate idpX509cert = loadCertificateFromProp(IDP_X509CERT_PROPERTY_KEY);
 		if (idpX509cert != null)
 			saml2Setting.setIdpx509cert(idpX509cert);
+
+    X509Certificate idpX509SecondaryCert = loadCertificateFromProp(IDP_X509CERT_SECONDARY_PROPERTY_KEY);
+    if (idpX509SecondaryCert != null)
+      saml2Setting.setIdpx509SecondaryCert(idpX509SecondaryCert);
 
 		String idpCertFingerprint = loadStringProperty(CERTFINGERPRINT_PROPERTY_KEY);
 		if (idpCertFingerprint != null)
